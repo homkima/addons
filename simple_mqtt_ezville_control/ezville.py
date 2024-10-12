@@ -367,9 +367,14 @@ def ezville_loop(config):
             MSG_QUEUE.put(msg)
 
     # MQTT 통신 연결 해제 Callback
-    def on_disconnect(client, userdata, rc):
-        log("INFO: MQTT 연결 해제")
-        pass
+    def on_disconnect(client, userdata, rc, properties=None):
+        if rc != 0:
+            # 비정상적인 연결 해제에 대한 로그를 남김
+            log(f"[WARNING] 비정상적으로 연결이 끊어졌습니다. 코드: {rc}")
+        else:
+            # 정상적인 연결 해제 로그를 남김
+            log("[INFO] MQTT 연결이 정상적으로 종료되었습니다.")
+
 
     # MQTT message를 분류하여 처리
     async def process_message():

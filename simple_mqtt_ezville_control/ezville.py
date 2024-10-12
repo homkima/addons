@@ -5,6 +5,7 @@ import asyncio
 import telnetlib
 import socket
 import random
+import paho.mqtt
 
 from queue import Queue
 
@@ -367,7 +368,9 @@ def ezville_loop(config):
             MSG_QUEUE.put(msg)
 
     # MQTT 통신 연결 해제 Callback
-    def on_disconnect(client, userdata, rc, properties=None, packet_from_broker=False):
+    def on_disconnect(client, userdata, rc):
+        log("paho-mqtt 버전:", paho.mqtt.__version__)
+
         if rc != 0:
             # 비정상적인 연결 해제에 대한 로그를 남김
             log(f"[WARNING] 비정상적으로 연결이 끊어졌습니다. 코드: {rc}")

@@ -268,43 +268,79 @@ def ezville_loop(config):
     startup_delay = 0
 
     # MQTT 통신 연결 Callback
-    def on_connect(client, userdata, flags, rc, properties):
-        if rc == 0:
-            log("[INFO] MQTT Broker 연결 성공")
-            # Socket인 경우 MQTT 장치의 명령 관련과 MQTT Status (Birth/Last Will Testament) Topic만 구독
-            if comm_mode == "socket":
-                client.subscribe([(HA_TOPIC + "/#", 0), ("homeassistant/status", 0)])
-            # Mixed인 경우 MQTT 장치 및 EW11의 명령/수신 관련 Topic 과 MQTT Status (Birth/Last Will Testament) Topic 만 구독
-            elif comm_mode == "mixed":
-                client.subscribe(
-                    [
-                        (HA_TOPIC + "/#", 0),
-                        (EW11_TOPIC + "/recv", 0),
-                        ("homeassistant/status", 0),
-                    ]
-                )
-            # MQTT 인 경우 모든 Topic 구독
+    def on_connect(client, userdata, flags, rc, properties=None):
+        if isinstance(rc, int):
+            # rc가 정수인 경우 (과거 버전의 paho-mqtt 라이브러리)
+            if rc == 0:
+                log("[INFO] MQTT Broker 연결 성공")
+                # Socket인 경우 MQTT 장치의 명령 관련과 MQTT Status (Birth/Last Will Testament) Topic만 구독
+                if comm_mode == "socket":
+                    client.subscribe([(HA_TOPIC + "/#", 0), ("homeassistant/status", 0)])
+                # Mixed인 경우 MQTT 장치 및 EW11의 명령/수신 관련 Topic 과 MQTT Status (Birth/Last Will Testament) Topic 만 구독
+                elif comm_mode == "mixed":
+                    client.subscribe(
+                        [
+                            (HA_TOPIC + "/#", 0),
+                            (EW11_TOPIC + "/recv", 0),
+                            ("homeassistant/status", 0),
+                        ]
+                    )
+                # MQTT 인 경우 모든 Topic 구독
+                else:
+                    client.subscribe(
+                        [
+                            (HA_TOPIC + "/#", 0),
+                            (EW11_TOPIC + "/recv", 0),
+                            (EW11_TOPIC + "/send", 1),
+                            ("homeassistant/status", 0),
+                        ]
+                    )
             else:
-                client.subscribe(
-                    [
-                        (HA_TOPIC + "/#", 0),
-                        (EW11_TOPIC + "/recv", 0),
-                        (EW11_TOPIC + "/send", 1),
-                        ("homeassistant/status", 0),
-                    ]
-                )
-        else:
-            errcode = {
-                1: "Connection refused - incorrect protocol version",
-                2: "Connection refused - invalid client identifier",
-                3: "Connection refused - server unavailable",
-                4: "Connection refused - bad username or password",
-                5: "Connection refused - not authorised",
-            }
-            # rc가 ReasonCode 객체인 경우 값을 정수로 변환
-            if isinstance(rc, mqtt.ReasonCodes):
-                rc = rc.value
-            log(errcode.get(rc, f"Unknown error with code {rc}"))
+                errcode = {
+                    1: "Connection refused - incorrect protocol version",
+                    2: "Connection refused - invalid client identifier",
+                    3: "Connection refused - server unavailable",
+                    4: "Connection refused - bad username or password",
+                    5: "Connection refused - not authorised",
+                }
+                log(errcode.get(rc, f"Unknown error with code {rc}"))
+        elif isinstance(rc, mqtt.ReasonCodes):
+            # rc가 ReasonCode 객체인 경우 (새로운 버전의 paho-mqtt 라이브러리)
+            rc_value = rc.value  # ReasonCode 객체에서 값을 추출
+            if rc_value == 0:
+                log("[INFO] MQTT Broker 연결 성공")
+                # Socket인 경우 MQTT 장치의 명령 관련과 MQTT Status (Birth/Last Will Testament) Topic만 구독
+                if comm_mode == "socket":
+                    client.subscribe([(HA_TOPIC + "/#", 0), ("homeassistant/status", 0)])
+                # Mixed인 경우 MQTT 장치 및 EW11의 명령/수신 관련 Topic 과 MQTT Status (Birth/Last Will Testament) Topic 만 구독
+                elif comm_mode == "mixed":
+                    client.subscribe(
+                        [
+                            (HA_TOPIC + "/#", 0),
+                            (EW11_TOPIC + "/recv", 0),
+                            ("homeassistant/status", 0),
+                        ]
+                    )
+                # MQTT 인 경우 모든 Topic 구독
+                else:
+                    client.subscribe(
+                        [
+                            (HA_TOPIC + "/#", 0),
+                            (EW11_TOPIC + "/recv", 0),
+                            (EW11_TOPIC + "/send", 1),
+                            ("homeassistant/status", 0),
+                        ]
+                    )
+            else:
+                errcode = {
+                    1: "Connection refused - incorrect protocol version",
+                    2: "Connection refused - invalid client identifier",
+                    3: "Connection refused - server unavailable",
+                    4: "Connection refused - bad username or password",
+                    5: "Connection refused - not authorised",
+                }
+                log(errcode.get(rc_value, f"Unknown error with code {rc_value}"))
+
 
     # MQTT 메시지 Callback
     def on_message(client, userdata, msg):

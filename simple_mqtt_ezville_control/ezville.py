@@ -5,8 +5,6 @@ import asyncio
 import telnetlib
 import socket
 import random
-import paho.mqtt
-from packaging import version
 
 from queue import Queue
 
@@ -271,8 +269,6 @@ def ezville_loop(config):
 
     # MQTT 통신 연결 Callback
     def on_connect(client, userdata, flags, rc, properties=None):
-        log("paho-mqtt 버전:", paho.mqtt.__version__)
-        log("paho-mqtt 버전:", mqtt.__version__)
 
         if isinstance(rc, int):
             # rc가 정수인 경우 (과거 버전의 paho-mqtt 라이브러리)

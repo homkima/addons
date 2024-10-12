@@ -373,18 +373,12 @@ def ezville_loop(config):
 
     # MQTT 통신 연결 해제 Callback
     
-    if version.parse(mqtt.__version__) >= version.parse('1.6.0'):
-        def on_disconnect(client, userdata, rc, properties=None, reasonCode=None):
-            if rc != 0:
-                log(f"[WARNING] 비정상적으로 연결이 끊어졌습니다. 코드: {rc}")
-            else:
-                log("[INFO] MQTT 연결이 정상적으로 종료되었습니다.")
-    else:
-        def on_disconnect(client, userdata, rc):
-            if rc != 0:
-                log(f"[WARNING] 비정상적으로 연결이 끊어졌습니다. 코드: {rc}")
-            else:
-                log("[INFO] MQTT 연결이 정상적으로 종료되었습니다.")
+    
+    def on_disconnect(client, userdata, rc, *args, **kwargs):
+        if rc != 0:
+            log(f"[WARNING] 비정상적으로 연결이 끊어졌습니다. 코드: {rc}")
+        else:
+            log("[INFO] MQTT 연결이 정상적으로 종료되었습니다.")
 
 
     # MQTT message를 분류하여 처리

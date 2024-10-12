@@ -269,8 +269,8 @@ def ezville_loop(config):
 
     # MQTT 통신 연결 Callback
     def on_connect(client, userdata, flags, rc, properties):
-        if rc == 0:
-            log("[INFO] MQTT Broker 연결 성공")
+    if rc == 0:
+        log("[INFO] MQTT Broker 연결 성공")
             # Socket인 경우 MQTT 장치의 명령 관련과 MQTT Status (Birth/Last Will Testament) Topic만 구독
             if comm_mode == "socket":
                 client.subscribe([(HA_TOPIC + "/#", 0), ("homeassistant/status", 0)])
@@ -301,7 +301,10 @@ def ezville_loop(config):
                 4: "Connection refused - bad username or password",
                 5: "Connection refused - not authorised",
             }
-            log(errcode[rc])
+            # ReasonCode 객체를 정수로 변환
+            if isinstance(rc, mqtt.ReasonCodes):
+                rc = rc.value
+            log(errcode.get(rc, f"Unknown error with code {rc}"))
 
     # MQTT 메시지 Callback
     def on_message(client, userdata, msg):

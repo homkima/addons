@@ -301,7 +301,7 @@ def ezville_loop(config):
                 4: "Connection refused - bad username or password",
                 5: "Connection refused - not authorised",
             }
-            # ReasonCode 객체를 정수로 변환
+            # rc가 ReasonCode 객체인 경우 값을 정수로 변환
             if isinstance(rc, mqtt.ReasonCodes):
                 rc = rc.value
             log(errcode.get(rc, f"Unknown error with code {rc}"))
